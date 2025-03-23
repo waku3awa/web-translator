@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API接続テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>API接続テスト</h1>
+    <p>このページは、サーバーAPIへの接続をテストするためのものです。</p>
+    
+    <button id="testButton">APIをテスト</button>
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'テスト中...';
+            
+            try {
+                // Simple test URL
+                const testUrl = 'https://example.com';
+                const apiUrl = `/api/fetch-page?url=${encodeURIComponent(testUrl)}`;
+                
+                resultDiv.textContent += `\n\nAPI URL: ${apiUrl}`;
+                
+                // Fetch with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                resultDiv.textContent += '\n\nFetching...';
+                
+                const response = await fetch(apiUrl, { 
+                    signal: controller.signal,
+                    cache: 'no-cache'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                resultDiv.textContent += `\n\nResponse status: ${response.status} ${response.statusText}`;
+                resultDiv.textContent += `\nResponse type: ${response.type}`;
+                
+                const responseText = await response.text();
+                resultDiv.textContent += `\n\nResponse length: ${responseText.length} characters`;
+                resultDiv.textContent += `\n\nFirst 100 characters: ${responseText.substring(0, 100)}`;
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    resultDiv.textContent += `\n\nJSON parsed successfully`;
+                    resultDiv.textContent += `\nKeys: ${Object.keys(data).join(', ')}`;
+                    
+                    if (data.html) {
+                        resultDiv.textContent += `\n\nHTML content length: ${data.html.length} characters`;
+                        resultDiv.textContent += `\n\nTest successful!`;
+                    } else {
+                        resultDiv.textContent += `\n\nNo HTML content in response`;
+                    }
+                } catch (jsonError) {
+                    resultDiv.textContent += `\n\nJSON parse error: ${jsonError.message}`;
+                    resultDiv.textContent += `\n\nResponse is not valid JSON`;
+                }
+            } catch (error) {
+                resultDiv.textContent += `\n\nError: ${error.name} - ${error.message}`;
+                console.error('Test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
